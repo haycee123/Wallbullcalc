@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retaining Wall Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    label, input, select, textarea { display: block; margin-bottom: 10px; }
+    .result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; background: #f8f8f8; }
+    .logo { max-width: 200px; margin-bottom: 20px; }
+    .print-button { margin-top: 20px; }
+    footer { margin-top: 40px; font-size: 0.9em; color: #555; }
+    @media print {
+      label, input, select, button, textarea { display: none; }
+      .print-button { display: none; }
+    }
+    .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h2>Retaining Wall Material Calculator</h2>  <textarea id="importData" placeholder="Paste previous section data here (JSON format) and click Import"></textarea><button onclick="importSections()">Import Previous Calculation</button>
+
+  <div id="sections"></div>
+  <button onclick="addSection()">➕ New Wall Section</button>
+  <button onclick="addSQMSection()">➕ Add SQM Based Section</button>
+  <button class="print-button" onclick="printClientQuoteSummary()">🖨️ Print Quote Summary (No Costs)</button>  <div class="result" id="grandTotal"></div>
+  <footer>
+    Wall Bulls Pty Ltd | ABN 00 000 000 000<br>
+    Drilling Holes and Erecting Poles<br>
+    📞 0461 599 056 | 📧 info@wallbulls.com.au
+  </footer><script>
+let sectionIndex = 0;
+
+function addSection() {
+  const idx = sectionIndex++;
+  const div = document.createElement("div");
+  div.className = "section";
+  div.innerHTML = `
+    <label>Length (m): <input type="number" id="length${idx}" value="5"></label>
+    <label>Height (m): <input type="number" id="height${idx}" value="1.2"></label>
+    <label>Sleeper Type:
+      <select id="sleeperType${idx}">
+        <option value="Smooth Grey 1.98">Smooth Grey 1.98</option>
+        <option value="Timber Finish 1.98">Timber Finish 1.98</option>
+      </select>
+    </label>
+    <label>Post Type:
+      <select id="postType${idx}">
+        <option value="100PFC">100PFC</option>
+        <option value="150PFC">150PFC</option>
+        <option value="300PFC">300PFC</option>
+      </select>
+    </label>
+    <label>Post Length (m):
+      <select id="postLength${idx}">
+        <option value="2.0">2.0</option>
+        <option value="2.4">2.4</option>
+        <option value="3.0">3.0</option>
+      </select>
+    </label>
+    <label>Labour Rate ($/sqm): <input type="number" id="labourRate${idx}" value="90"></label>
+    <label>Delivery Cost ($): <input type="number" id="deliveryCost${idx}" value="250"></label>
+    <div class="result" id="results${idx}"></div>
+  `;
+  document.getElementById("sections").appendChild(div);
+}
+
+function importSections() {
+  try {
+    const data = JSON.parse(document.getElementById('importData').value);
+    data.forEach(section => {
+      addSection();
+      const idx = sectionIndex - 1;
+      document.getElementById(`length${idx}`).value = section.length;
+      document.getElementById(`height${idx}`).value = section.height;
+      document.getElementById(`sleeperType${idx}`).value = section.sleeperType;
+      document.getElementById(`postType${idx}`).value = section.postType;
+      document.getElementById(`postLength${idx}`).value = section.postLength;
+      document.getElementById(`labourRate${idx}`).value = section.labourRate;
+      document.getElementById(`deliveryCost${idx}`).value = section.deliveryCost;
+    });
+  } catch (e) {
+    alert("Invalid import data");
+  }
+}
+
+function addSQMSection() {
+  const sqm = prompt("Enter total square meters for this section:");
+  const exposure = prompt("Is this section exposed (yes/no)?");
+  const type = exposure.toLowerCase() === 'yes' ? 'Timber Finish 1.98' : 'Smooth Grey 1.98';
+  const height = 1.2;
+  const length = (parseFloat(sqm) / height).toFixed(2);
+  addSection();
+  const idx = sectionIndex - 1;
+  document.getElementById(`length${idx}`).value = length;
+  document.getElementById(`height${idx}`).value = height;
+  document.getElementById(`sleeperType${idx}`).value = type;
+}
+
+function printClientQuoteSummary() {
+  let summary = "Client Quote Breakdown\n------------------------\n";
+  for (let i = 0; i < sectionIndex; i++) {
+    const length = document.getElementById(`length${i}`).value;
+    const height = document.getElementById(`height${i}`).value;
+    const sleeperType = document.getElementById(`sleeperType${i}`).value;
+    const postType = document.getElementById(`postType${i}`).value;
+    const postLength = document.getElementById(`postLength${i}`).value;
+    summary += `Section ${i + 1}:\n`;
+    summary += `- Length: ${length}m\n`;
+    summary += `- Height: ${height}m\n`;
+    summary += `- Sleeper Type: ${sleeperType}\n`;
+    summary += `- Post Type: ${postType} @ ${postLength}m\n`;
+    summary += `- Surface Area: ${(length * height).toFixed(2)} sqm\n\n`;
+  }
+  const printWindow = window.open('', '', 'width=600,height=800');
+  printWindow.document.write('<pre>' + summary + '</pre>');printWindow.document.close(); printWindow.focus(); printWindow.print(); } </script>
+
+</body>
+</html>
